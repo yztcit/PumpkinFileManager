@@ -6,12 +6,12 @@
         android:icon="@drawable/ic_search_black_24dp"
         android:title="搜索"
         app:actionViewClass="android.support.v7.widget.SearchView"
-        app:showAsAction="always"></item>
+        app:showAsAction="always"/>
     <item
         android:id="@+id/action_new_folder"
         android:icon="@drawable/ic_add_black_24dp"
         android:title="新建文件夹"
-        app:showAsAction="always"></item>
+        app:showAsAction="always"/>
     <item android:id="@+id/action_copy_paste"
         android:icon="@drawable/ic_content_copy_24dp"
         app:showAsAction="always"
@@ -30,13 +30,13 @@
                 android:checkableBehavior="none">
                 <item
                     android:id="@+id/action_sort_size"
-                    android:title="按文件大小排序"></item>
+                    android:title="按文件大小排序"/>
                 <item
                     android:id="@+id/action_sort_date"
-                    android:title="按文件时间排序"></item>
+                    android:title="按文件时间排序"/>
                 <item
                     android:id="@+id/action_sort_name"
-                    android:title="按文件名称排序"></item>
+                    android:title="按文件名称排序"/>
             </group>
         </menu>
     </item>

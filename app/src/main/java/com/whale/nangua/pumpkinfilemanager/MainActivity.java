@@ -8,6 +8,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -30,6 +31,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Stack;
 
 public class MainActivity extends AppCompatActivity implements FileAdapter.OnCopyFileListener{
@@ -52,19 +55,33 @@ public class MainActivity extends AppCompatActivity implements FileAdapter.OnCop
         initView();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        File[] listFiles = Environment.getExternalStorageDirectory().listFiles();
+        Log.d("main", "------initView:4----- "+ Arrays.toString(listFiles));
+    }
+
     private void initView() {
         rootpath = Environment.getExternalStorageDirectory().toString();
+        Log.d("main", "------initView:1----- "+rootpath);
         nowPathStack = new Stack<>();
         lv = (ListView) findViewById(R.id.lv);
         showtv = (TextView) findViewById(R.id.showtv);
         //获得本地文件信息列表，绑定到data
         files = Environment.getExternalStorageDirectory()
                 .listFiles();
+        Log.d("main", "------initView:2----- "+ Arrays.toString(files));
+        String externalStorageState = Environment.getExternalStorageState();
+        Log.d("main", "------initView:3----- "+ externalStorageState);
         //将根路径推入路径栈
         nowPathStack.push(rootpath);
-        for (File f : files) {
-            data.add(f);
+        if (files != null && files.length >= 0) {
+            Collections.addAll(data, files);
         }
+//        for (File f : files) {
+//            data.add(f);
+//        }
         showtv.setText(getPathString());
         fileAdapter = new FileAdapter(this, data);
         fileAdapter.setonCopyListner(this);
@@ -94,16 +111,21 @@ public class MainActivity extends AppCompatActivity implements FileAdapter.OnCop
 
             File file = files[position];
             if (file.isFile()) {
-                // 打开
-                Intent intent = new Intent();
-                // 打开、显示
-                intent.setAction(Intent.ACTION_VIEW);
-                Uri data = Uri.fromFile(file);
-                int index = file.getName().lastIndexOf(".");
-                String suffix = file.getName().substring(index + 1);
-                String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(suffix);
-                intent.setDataAndType(data, type);
-                startActivity(intent);
+                // FIXME: 2018/4/24 can not open some files
+                try {
+                    // 打开
+                    Intent intent = new Intent();
+                    // 打开、显示
+                    intent.setAction(Intent.ACTION_VIEW);
+                    Uri data = Uri.fromFile(file);
+                    int index = file.getName().lastIndexOf(".");
+                    String suffix = file.getName().substring(index + 1);
+                    String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(suffix);
+                    intent.setDataAndType(data, type);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             } else {
                 //如果是文件夹
                 // 清除列表数据
@@ -120,9 +142,7 @@ public class MainActivity extends AppCompatActivity implements FileAdapter.OnCop
         showtv.setText(path);
         files = new File(path).listFiles();
         data.clear();
-        for (File f : files) {
-            data.add(f);
-        }
+        Collections.addAll(data, files);
         files = fileAdapter.setfiledata(data);
     }
 
@@ -222,10 +242,8 @@ public class MainActivity extends AppCompatActivity implements FileAdapter.OnCop
      * 复制或粘贴
      */
     private void doPaste() {
-        File newFile = new File(getPathString()+"/"+watingCopyFile.getName());
-        if (watingCopyFile.equals(null)) {
-            Snackbar.make(findViewById(R.id.main_view), "当前粘贴板为空，不能粘贴", Snackbar.LENGTH_SHORT).show();
-        } else {
+        if (watingCopyFile != null) {
+            File newFile = new File(getPathString()+"/"+watingCopyFile.getName());
             if (watingCopyFile.isFile()&&watingCopyFile.exists()){
                 try {
                     FileInputStream fis = new FileInputStream(watingCopyFile);
@@ -252,6 +270,8 @@ public class MainActivity extends AppCompatActivity implements FileAdapter.OnCop
                 Toast.makeText(MainActivity.this,"复制" + newFile.getName() + "成功",Toast.LENGTH_SHORT).show();
                 fileAdapter.notifyDataSetChanged();
             }
+        } else {
+            Snackbar.make(findViewById(R.id.main_view), "当前粘贴板为空，不能粘贴", Snackbar.LENGTH_SHORT).show();
         }
 
     }
@@ -312,8 +332,11 @@ public class MainActivity extends AppCompatActivity implements FileAdapter.OnCop
         ifSearching = true;
         searchDialog = new AlertDialog.Builder(MainActivity.this).create();
         searchDialog.show();
-        searchDialog.getWindow().setContentView(R.layout.query_dialog);
-        querytv = (TextView) searchDialog.getWindow().findViewById(R.id.query_tv);
+        View inflate = getLayoutInflater().inflate(R.layout.query_dialog, null);
+        querytv = (TextView) inflate.findViewById(R.id.query_tv);
+        searchDialog.setContentView(inflate);
+//        searchDialog.getWindow().setContentView(R.layout.query_dialog);
+//        querytv = (TextView) searchDialog.getWindow().findViewById(R.id.query_tv);
         new QueryAsyncTask(querytv,getPathString(),query,fileAdapter,searchDialog).execute();
     }
 }

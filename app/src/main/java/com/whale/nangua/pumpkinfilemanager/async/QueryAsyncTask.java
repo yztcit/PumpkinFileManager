@@ -25,6 +25,7 @@ public class QueryAsyncTask extends AsyncTask<Integer,Integer,ArrayList<File>> {
     String query;
     FileAdapter fileAdapter;
     AlertDialog dialog;
+    private int curScanFileNum = 0;
     public QueryAsyncTask(TextView tv,String path,String query,FileAdapter fileAdapter,AlertDialog dialog) {
         this.tv = tv;
         this.path = path;
@@ -54,6 +55,7 @@ public class QueryAsyncTask extends AsyncTask<Integer,Integer,ArrayList<File>> {
 
     @Override
     protected void onPostExecute(ArrayList<File> data) {
+//        if (curScanFileNum != filenum) return;
         tv.setText("扫描完成，共扫描文件：" + filenum + "个");
         fileAdapter.setfiledata(data);
         //
@@ -63,8 +65,12 @@ public class QueryAsyncTask extends AsyncTask<Integer,Integer,ArrayList<File>> {
 
     @Override
     protected void onProgressUpdate(Integer... values) {
-        int v = values[0];
-        tv.setText("已扫描文件数：" + v);
+        curScanFileNum = values[0];
+//        if (curScanFileNum == filenum) {
+//            dialog.cancel();
+//            return;
+//        }
+        tv.setText("已扫描文件数：" + curScanFileNum);
         fileAdapter.notifyDataSetChanged();
     }
 
